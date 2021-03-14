@@ -27812,27 +27812,27 @@ var RemoteTrajectory = /*@__PURE__*/(function (Trajectory$$1) {
 }(Trajectory));
 
 /**
- * @file Request Trajectory
+ * @file Function Trajectory
  * @author Alexander Rose <alexander.rose@weirdbyte.de>
  * @private
  */
 /**
- * Request trajectory class. Gets data from an JavaScript function.
+ * Function trajectory class. Gets data from an JavaScript function.
  */
-var RequestTrajectory = /*@__PURE__*/(function (Trajectory$$1) {
-    function RequestTrajectory(request, structure, params) {
+var FunctionTrajectory = /*@__PURE__*/(function (Trajectory$$1) {
+    function FunctionTrajectory(func, structure, params) {
         Trajectory$$1.call(this, '', structure, params);
-        this.request = request;
+        this.func = func;
         this._init(structure);
     }
 
-    if ( Trajectory$$1 ) RequestTrajectory.__proto__ = Trajectory$$1;
-    RequestTrajectory.prototype = Object.create( Trajectory$$1 && Trajectory$$1.prototype );
-    RequestTrajectory.prototype.constructor = RequestTrajectory;
+    if ( Trajectory$$1 ) FunctionTrajectory.__proto__ = Trajectory$$1;
+    FunctionTrajectory.prototype = Object.create( Trajectory$$1 && Trajectory$$1.prototype );
+    FunctionTrajectory.prototype.constructor = FunctionTrajectory;
 
     var prototypeAccessors = { type: { configurable: true } };
-    prototypeAccessors.type.get = function () { return 'request'; };
-    RequestTrajectory.prototype._makeAtomIndices = function _makeAtomIndices () {
+    prototypeAccessors.type.get = function () { return 'function'; };
+    FunctionTrajectory.prototype._makeAtomIndices = function _makeAtomIndices () {
         var atomIndices = [];
         if (this.structure.type === 'StructureView') {
             var indices = this.structure.getAtomIndices(); // TODO
@@ -27854,23 +27854,25 @@ var RequestTrajectory = /*@__PURE__*/(function (Trajectory$$1) {
         }
         this.atomIndices = atomIndices;
     };
-    RequestTrajectory.prototype._loadFrame = function _loadFrame (i, callback) {
+    FunctionTrajectory.prototype._loadFrame = function _loadFrame (i, callback) {
         var this$1 = this;
 
-        this.request('frame', { frame: i, atomIndices: this.atomIndices }, function (i, box, coords, frameCount) {
+        this.func(function (i, box, coords, frameCount) {
             this$1._process(i, box, coords, frameCount);
             if (typeof callback === 'function') {
                 callback();
             }
-        });
+        }, i, this.atomIndices);
     };
-    RequestTrajectory.prototype._loadFrameCount = function _loadFrameCount () {
-        this.request('count', {}, this._setFrameCount.bind(this));
+    FunctionTrajectory.prototype._loadFrameCount = function _loadFrameCount () {
+        var this$1 = this;
+
+        this.func(function (count) { return this$1._setFrameCount(count); });
     };
 
-    Object.defineProperties( RequestTrajectory.prototype, prototypeAccessors );
+    Object.defineProperties( FunctionTrajectory.prototype, prototypeAccessors );
 
-    return RequestTrajectory;
+    return FunctionTrajectory;
 }(Trajectory));
 
 /**
@@ -27887,7 +27889,7 @@ function makeTrajectory(trajSrc, structure, params) {
         traj = new StructureTrajectory(trajSrc, structure, params);
     }
     else if (trajSrc && typeof trajSrc === 'function') {
-        traj = new RequestTrajectory(trajSrc, structure, params);
+        traj = new FunctionTrajectory(trajSrc, structure, params);
     }
     else {
         traj = new RemoteTrajectory(trajSrc, structure, params);

@@ -10,7 +10,7 @@ import { TrajectoryParameters } from './trajectory'
 import FramesTrajectory from './frames-trajectory'
 import StructureTrajectory from './structure-trajectory'
 import RemoteTrajectory from './remote-trajectory'
-import RequestTrajectory from './request-trajectory'
+import FunctionTrajectory from './function-trajectory'
 
 export function makeTrajectory (trajSrc: string|Frames, structure: Structure, params: TrajectoryParameters) {
   let traj
@@ -20,7 +20,7 @@ export function makeTrajectory (trajSrc: string|Frames, structure: Structure, pa
   } else if (!trajSrc && structure.frames) {
     traj = new StructureTrajectory(trajSrc, structure, params)
   } else if (trajSrc && typeof trajSrc === 'function') {
-    traj = new RequestTrajectory(trajSrc, structure, params)
+    traj = new FunctionTrajectory(trajSrc, structure, params)
   } else {
     traj = new RemoteTrajectory(trajSrc, structure, params)
   }
