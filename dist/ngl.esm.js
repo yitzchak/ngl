@@ -2993,6 +2993,7 @@ Script.prototype.run = function run (stage) {
     return new Promise(function (resolve, reject) {
         try {
             this$1.fn.apply(null, [stage, this$1.name, this$1.path, this$1.dir]);
+            // @ts-ignore
             resolve();
         }
         catch (e) {
@@ -3225,7 +3226,7 @@ var PdbWriter = /*@__PURE__*/(function (Writer$$1) {
                 this$1._records.push(sprintf(formatString, serial, atomname, a.resname, defaults(a.chainname, ' '), a.resno, a.x, a.y, a.z, defaults(a.occupancy, 1.0), defaults(a.bfactor, 0.0), '', // segid
                 defaults(a.element, '')));
                 ia += 1;
-            });
+            }, this$1.structure.getSelection());
             this$1._records.push(sprintf('%-80s', 'ENDMDL'));
             im += 1;
         });
@@ -6319,16 +6320,22 @@ MouseObserver.prototype._onMousewheel = function _onMousewheel (event) {
     }
     else if ('deltaY' in event && !('detail' in event)) {
         // Old Firefox or IE 11: deltaY but no deltaMode; treat as pixels
+        // @ts-ignore
         delta = -event.deltaY * (2.5 / 100.0);
+        // @ts-ignore
     }
     else if (event.wheelDelta !== undefined) {
+        // @ts-ignore
         delta = -event.wheelDelta * (2.5 / 100);
+        // @ts-ignore
     }
     else if (event.wheelDeltaY !== undefined) {
+        // @ts-ignore
         delta = -event.wheelDeltaY * (2.5 / 100);
     }
     else {
         // Old Firefox, MouseWheelEvent
+        // @ts-ignore
         delta = -event.detail / 3;
     }
     this.signals.scrolled.dispatch(delta);
@@ -9615,7 +9622,9 @@ Store.prototype.clear = function clear () {
  * @return {undefined}
  */
 Store.prototype.dispose = function dispose () {
+    // @ts-ignore
     delete this.length;
+    // @ts-ignore
     delete this.count;
     for (var i = 0, il = this._fields.length; i < il; ++i) {
         var name = this._fields[i][0];
@@ -10408,7 +10417,7 @@ var AA1 = {
     'GLU': 'E',
     'THR': 'T',
     'SEC': 'U',
-    'PYL': 'O',
+    'PYL': 'O', // as per IUPAC definition
 };
 var AA3 = Object.keys(AA1);
 var RnaBases = ['A', 'C', 'T', 'G', 'U', 'I'];
@@ -15131,10 +15140,15 @@ Volume.prototype.setData = function setData (data, nx, ny, nz, atomindex) {
     this.nz = nz || 1;
     this.data = data || new Float32Array(1);
     this.setAtomindex(atomindex);
+    // @ts-ignore
     delete this._position;
+    // @ts-ignore
     delete this._min;
+    // @ts-ignore
     delete this._max;
+    // @ts-ignore
     delete this._mean;
+    // @ts-ignore
     delete this._rms;
     if (this.worker)
         { this.worker.terminate(); }
@@ -23538,7 +23552,7 @@ Structure.prototype.getAtomSetWithinGroup = function getAtomSetWithinGroup (sele
 };
 //
 Structure.prototype.getSelection = function getSelection () {
-    return false;
+    return;
 };
 Structure.prototype.getStructure = function getStructure () {
     return this;
@@ -24139,14 +24153,23 @@ Structure.prototype.dispose = function dispose () {
     this.residueStore.dispose();
     this.chainStore.dispose();
     this.modelStore.dispose();
+    // @ts-ignore
     delete this.bondStore;
+    // @ts-ignore
     delete this.atomStore;
+    // @ts-ignore
     delete this.residueStore;
+    // @ts-ignore
     delete this.chainStore;
+    // @ts-ignore
     delete this.modelStore;
+    // @ts-ignore
     delete this.frames;
+    // @ts-ignore
     delete this.boxes;
+    // @ts-ignore
     delete this.bondSet;
+    // @ts-ignore
     delete this.atomSet;
 };
 
@@ -26375,7 +26398,9 @@ Component.prototype.removeAllRepresentations = function removeAllRepresentations
 Component.prototype.dispose = function dispose () {
     this.removeAllAnnotations();
     this.removeAllRepresentations();
+    // @ts-ignore
     delete this.annotationList;
+    // @ts-ignore
     delete this.reprList;
     this.signals.disposed.dispatch();
 };
@@ -27787,6 +27812,68 @@ var RemoteTrajectory = /*@__PURE__*/(function (Trajectory$$1) {
 }(Trajectory));
 
 /**
+ * @file Request Trajectory
+ * @author Alexander Rose <alexander.rose@weirdbyte.de>
+ * @private
+ */
+/**
+ * Request trajectory class. Gets data from an JavaScript function.
+ */
+var RequestTrajectory = /*@__PURE__*/(function (Trajectory$$1) {
+    function RequestTrajectory(request, structure, params) {
+        Trajectory$$1.call(this, '', structure, params);
+        this.request = request;
+        this._init(structure);
+    }
+
+    if ( Trajectory$$1 ) RequestTrajectory.__proto__ = Trajectory$$1;
+    RequestTrajectory.prototype = Object.create( Trajectory$$1 && Trajectory$$1.prototype );
+    RequestTrajectory.prototype.constructor = RequestTrajectory;
+
+    var prototypeAccessors = { type: { configurable: true } };
+    prototypeAccessors.type.get = function () { return 'request'; };
+    RequestTrajectory.prototype._makeAtomIndices = function _makeAtomIndices () {
+        var atomIndices = [];
+        if (this.structure.type === 'StructureView') {
+            var indices = this.structure.getAtomIndices(); // TODO
+            var n = indices.length;
+            var p = indices[0];
+            var q = indices[0];
+            for (var i = 1; i < n; ++i) {
+                var r = indices[i];
+                if (q + 1 < r) {
+                    atomIndices.push([p, q + 1]);
+                    p = r;
+                }
+                q = r;
+            }
+            atomIndices.push([p, q + 1]);
+        }
+        else {
+            atomIndices.push([0, this.atomCount]);
+        }
+        this.atomIndices = atomIndices;
+    };
+    RequestTrajectory.prototype._loadFrame = function _loadFrame (i, callback) {
+        var this$1 = this;
+
+        this.request('frame', { frame: i, atomIndices: this.atomIndices }, function (i, box, coords, frameCount) {
+            this$1._process(i, box, coords, frameCount);
+            if (typeof callback === 'function') {
+                callback();
+            }
+        });
+    };
+    RequestTrajectory.prototype._loadFrameCount = function _loadFrameCount () {
+        this.request('count', {}, this._setFrameCount.bind(this));
+    };
+
+    Object.defineProperties( RequestTrajectory.prototype, prototypeAccessors );
+
+    return RequestTrajectory;
+}(Trajectory));
+
+/**
  * @file Trajectory Utils
  * @author Alexander Rose <alexander.rose@weirdbyte.de>
  * @private
@@ -27798,6 +27885,9 @@ function makeTrajectory(trajSrc, structure, params) {
     }
     else if (!trajSrc && structure.frames) {
         traj = new StructureTrajectory(trajSrc, structure, params);
+    }
+    else if (trajSrc && typeof trajSrc === 'function') {
+        traj = new RequestTrajectory(trajSrc, structure, params);
     }
     else {
         traj = new RemoteTrajectory(trajSrc, structure, params);
@@ -28013,10 +28103,15 @@ var StructureView = /*@__PURE__*/(function (Structure$$1) {
             this.selection.signals.stringChanged.remove(this.refresh, this);
         }
         this.structure.signals.refreshed.remove(this.refresh, this);
+        // @ts-ignore
         delete this.structure;
+        // @ts-ignore
         delete this.atomSet;
+        // @ts-ignore
         delete this.bondSet;
+        // @ts-ignore
         delete this.atomCount;
+        // @ts-ignore
         delete this.bondCount;
     };
 
@@ -31441,7 +31536,9 @@ var StructureRepresentation = /*@__PURE__*/(function (Representation$$1) {
     };
     StructureRepresentation.prototype.dispose = function dispose () {
         this.structureView.dispose();
+        // @ts-ignore
         delete this.structure;
+        // @ts-ignore
         delete this.structureView;
         Representation$$1.prototype.dispose.call(this);
     };
@@ -36096,6 +36193,7 @@ var LabelFactory = function LabelFactory(type, text, format) {
     this.type = type;
     this.text = text;
     this.format = format;
+    this.errorLogged = false;
 };
 LabelFactory.prototype.atomLabel = function atomLabel (a) {
     var type = this.type;
@@ -36144,7 +36242,15 @@ LabelFactory.prototype.atomLabel = function atomLabel (a) {
             l = this.text[a.index];
             break;
         case 'format':
-            l = sprintf(this.format, a);
+            try {
+                l = sprintf(this.format, a);
+            }
+            catch (e) {
+                if (!this.errorLogged) {
+                    this.errorLogged = true;
+                    console.log(e.message);
+                }
+            }
             break;
         // case "qualified":
         default:
