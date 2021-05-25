@@ -215,7 +215,7 @@ class Stage {
       padding: '8px',
       fontFamily: 'sans-serif'
     })
-    this.viewer.container.appendChild(this.tooltip)
+    document.body.appendChild(this.tooltip)
 
     this.mouseObserver = new MouseObserver(this.viewer.renderer.domElement)
     this.viewerControls = new ViewerControls(this)
