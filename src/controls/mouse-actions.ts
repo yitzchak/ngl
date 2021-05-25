@@ -197,10 +197,12 @@ class MouseActions {
     const tt = stage.tooltip
     const sp = stage.getParameters() as any
     if (sp.tooltip && pickingProxy) {
-      const mp = pickingProxy.mouse.position
+      console.log(pickingProxy.mouse)
+      const mp = pickingProxy.mouse.canvasPosition
       const element = pickingProxy.mouse.domElement
+      console.log(element)
       tt.innerText = pickingProxy.getLabel()
-      tt.style.bottom = (window.innerHeight - element.offsetTop - mp.y + 3) + 'px'
+      tt.style.bottom = (window.innerHeight - element.offsetTop + mp.y + 3) + 'px'
       tt.style.left = (mp.x + element.offsetLeft + 3) + 'px'
       tt.style.display = 'block'
     } else {
