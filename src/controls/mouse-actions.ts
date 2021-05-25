@@ -202,8 +202,10 @@ class MouseActions {
       const element = pickingProxy.mouse.domElement
       console.log(element)
       tt.innerText = pickingProxy.getLabel()
-      tt.style.bottom = (window.innerHeight - element.offsetTop + mp.y + 3) + 'px'
+      tt.style.bottom = (element.offsetTop + element.offsetHeight + mp.y + 3) + 'px'
       tt.style.left = (mp.x + element.offsetLeft + 3) + 'px'
+      console.log(tt.style.bottom)
+      console.log(tt.style.left)
       tt.style.display = 'block'
     } else {
       tt.style.display = 'none'
