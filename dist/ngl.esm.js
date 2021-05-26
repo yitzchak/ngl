@@ -16910,7 +16910,7 @@ MouseActions.tooltipPick = function tooltipPick (stage, pickingProxy) {
     if (sp.tooltip && pickingProxy) {
         var mp = pickingProxy.mouse.position;
         console.log(pickingProxy);
-        tt.innerText = pickingProxy.getLabel();
+        tt.innerText = 'wibble' + pickingProxy.getLabel();
         tt.style.bottom = (window.innerHeight - mp.y + 3) + 'px';
         tt.style.left = (mp.x + 3) + 'px';
         tt.style.display = 'block';
