@@ -290,7 +290,7 @@ export function v3negate (out: Float32Array, a: Float32Array) {
   out[2] = -a[2]
 }
 
-export function v3angle (a: Float32Array, b: Float32Array) {
+export function v3angle (a: Float32Array, b: Float32Array, ref: Float32Array | null) {
   const ax = a[0]
   const ay = a[1]
   const az = a[2]
@@ -300,7 +300,8 @@ export function v3angle (a: Float32Array, b: Float32Array) {
   const cx = ay * bz - az * by
   const cy = az * bx - ax * bz
   const cz = ax * by - ay * bx
-  const s = Math.sqrt(cx * cx + cy * cy + cz * cz)
+  var s = Math.sqrt(cx * cx + cy * cy + cz * cz)
+  if (ref && (ref[0] * cx + ref[1] * cy + ref[2] * cz) < 0) s *= -1
   const c = ax * bx + ay * by + az * bz
   return Math.atan2(s, c)
 }

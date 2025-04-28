@@ -347,8 +347,9 @@ function getDihedralData (position: Float32Array, params: Partial<DihedralRepres
     v3normalize(inPlane1, inPlane1)
     v3normalize(inPlane2, inPlane2)
 
-    const angle = angles[ i ] = v3angle(inPlane1, inPlane2)
+    var angle = angles[ i ] = v3angle(inPlane1, inPlane2, v23)
     labelText[ i ] = (RAD2DEG * angle).toFixed(1) + String.fromCharCode(0x00B0)
+    angle = Math.abs(angle);
 
     v3cross(cross, inPlane1, v23)
     v3normalize(cross, cross)
