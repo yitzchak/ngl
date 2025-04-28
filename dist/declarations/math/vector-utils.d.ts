@@ -39,4 +39,4 @@ export declare function v3floor(out: Float32Array, a: Float32Array): void;
 export declare function v3ceil(out: Float32Array, a: Float32Array): void;
 export declare function v3round(out: Float32Array, a: Float32Array): void;
 export declare function v3negate(out: Float32Array, a: Float32Array): void;
-export declare function v3angle(a: Float32Array, b: Float32Array): number;
+export declare function v3angle(a: Float32Array, b: Float32Array, ref: Float32Array | null): number;
